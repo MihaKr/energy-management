@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  digit-postgres:
+    image: postgres:14-alpine
+    container_name: digit-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_MULTIPLE_DATABASES: ${DB_NAME},${DB_NAME}_test
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/main/docker/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - digit-energy-network
+
+  digit-energy-management:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.jvm
+    container_name: digit-energy-management
+    depends_on:
+      digit-postgres:
+        condition: service_healthy
+    environment:
+      QUARKUS_PROFILE: prod
+      QUARKUS_DATASOURCE_USERNAME: ${DB_USER}
+      QUARKUS_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://digit-postgres:5432/${DB_NAME}
+    networks:
+      - digit-energy-network
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres-data:
+
+networks:
+  digit-energy-network:
+    driver: bridge
