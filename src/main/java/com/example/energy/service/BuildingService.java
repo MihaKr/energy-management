@@ -17,7 +17,7 @@ public class BuildingService {
 
     public Building getBuilding(Integer buildingId) {
         if (buildingId == null) {
-            return null;
+            throw new IllegalArgumentException("Building ID cannot be null");
         }
         return buildingRepository.getBuilding(buildingId);
     }
@@ -25,6 +25,10 @@ public class BuildingService {
     public List<Building> getAllBuildings(int limit, int offset, String orderDirection) {
         if (limit < 0) {
             limit = 0;
+        }
+
+        if (offset < 0) {
+            offset = 0;
         }
         return buildingRepository.getAllBuildings(limit, offset, orderDirection);
     }
@@ -45,21 +49,17 @@ public class BuildingService {
 
     @Transactional
     public boolean deleteBuilding(BuildingInput input) {
-        try {
-            if (input.getBuildingId() == null) {
-                throw new IllegalArgumentException("Building ID cannot be null");
-            }
-
-            Building building = buildingRepository.getBuilding(input.getBuildingId());
-            if (building == null) {
-                throw new NotFoundException("Building not found with id: " + input.getBuildingId());
-            }
-
-            buildingRepository.deleteBuilding(input.getBuildingId());
-            return true;
-        } catch (Exception e) {
-            return false;
+        if (input.getBuildingId() == null) {
+            throw new IllegalArgumentException("Building ID cannot be null");
         }
+
+        Building building = buildingRepository.getBuilding(input.getBuildingId());
+        if (building == null) {
+            throw new NotFoundException("Building not found with id: " + input.getBuildingId());
+        }
+
+        buildingRepository.deleteBuilding(input.getBuildingId());
+        return true;
     }
 
     @Transactional

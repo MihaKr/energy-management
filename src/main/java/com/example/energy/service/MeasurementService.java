@@ -114,12 +114,12 @@ public class MeasurementService {
         }
 
         if (input.getBuildingId() != null) {
-            Building b = buildingRepository.getBuilding(measurement.getBuilding().getId());
+            Building b = buildingRepository.getBuilding(input.getBuildingId());
             measurement.setBuilding(b);
         }
 
         if (input.getDeviceId() != null) {
-            Device d = deviceRepository.getDevice(measurement.getDevice().getId());
+            Device d = deviceRepository.getDevice(input.getDeviceId());
             measurement.setDevice(d);
         }
 
@@ -153,6 +153,31 @@ public class MeasurementService {
         }
 
         List<Measurement> measurements = measurementRepository.findByBuildingIdAndTimestamp(buildingId, from, to);
+
+        return Float.valueOf((float) measurements.stream()
+                .mapToDouble(Measurement::getEnergyKwh)
+                .sum());
+    }
+
+    public Float getEnergyConsumptionByDevice(Integer deviceId, Instant from, Instant to) {
+        if (deviceId == null) {
+            throw new IllegalArgumentException("Building ID cannot be null");
+        }
+
+        if (from == null) {
+            throw new IllegalArgumentException("Timestamp From cannot be null");
+        }
+        if (to == null) {
+            throw new IllegalArgumentException("Timestamp To cannot be null");
+        }
+
+        Device device = deviceRepository.getDevice(deviceId);
+
+        if (device == null) {
+            throw new NotFoundException("Device not found with id: " + deviceId);
+        }
+
+        List<Measurement> measurements = measurementRepository.findByDeviceIdAndTimestamp(deviceId, from, to);
 
         return Float.valueOf((float) measurements.stream()
                 .mapToDouble(Measurement::getEnergyKwh)

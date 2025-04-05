@@ -24,44 +24,46 @@ public class BuildingGraphql {
 
     @Query("getBuilding")
     public Building getBuilding(Integer buildingId) {
-        return buildingService.getBuilding(buildingId);
+        try {
+            return buildingService.getBuilding(buildingId);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Query("getAllBuildings")
     public List<Building> getAllBuildings(@DefaultValue("10") int limit, @DefaultValue("0") int offset, @DefaultValue("asc") String orderDirection) {
-        return buildingService.getAllBuildings(limit, offset, orderDirection);
+        try {
+            return buildingService.getAllBuildings(limit, offset, orderDirection);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Mutation("createBuilding")
     public Building createBuilding(BuildingInput input) {
-        List<String> errors = new ArrayList<>();
-
-        if (input == null) {
-            throw new GraphQLException("Building input cannot be null");
+        try {
+            return buildingService.addBuilding(input);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
         }
-
-        if (input.getName() == null || input.getName().trim().isEmpty()) {
-            errors.add("Building name is required");
-        }
-
-        if (input.getLocation() == null || input.getLocation().trim().isEmpty()) {
-            errors.add("Building location is required");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new GraphQLException("Validation failed: " + String.join(", ", errors));
-        }
-
-        return buildingService.addBuilding(input);
     }
 
     @Mutation("deleteBuilding")
     public Boolean deleteBuilding(BuildingInput input) {
-        return buildingService.deleteBuilding(input);
+        try {
+            return buildingService.deleteBuilding(input);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Mutation("updateBuilding")
     public Building updateBuilding(BuildingInput input) {
-        return buildingService.updateBuilding(input);
+        try {
+            return buildingService.updateBuilding(input);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 }

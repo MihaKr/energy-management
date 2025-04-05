@@ -149,21 +149,7 @@ public class BuildingTests {
         for (int i = 0; i < 20; i++) {
             String randomBuildingName = RandomStringUtil.generate(10);
             String randomLocation = RandomStringUtil.generate(10);
-
-            String createMutation = String.format("""
-               mutation {
-                    createBuilding(input: {
-                     name: "%s"
-                     location: "%s"
-                  }) {
-                    id
-                    name
-                    location
-                  }
-               }""", randomBuildingName, randomLocation);
-
-            Response createResponse = client.sendGraphQLRequest(createMutation);
-            Integer buildingId = createResponse.path("data.createBuilding.id");
+            Response createResponse = createBuilding(randomBuildingName, randomLocation);
         }
 
         String query1 = String.format("""
@@ -264,42 +250,6 @@ public class BuildingTests {
 
         assertEquals("createBuilding", createResponse.path("errors[0].path[0]"));
         assertNull(createResponse.path("data.createBuilding"));
-    }
-    @Test
-    public void testCreateMeasurementWithNonExistentDevice() {
-        String createMutationB = String.format("""
-               mutation {
-                    createBuilding(input: {
-                     name: "%s"
-                     location: "%s"
-                  }) {
-                    id
-                    name
-                    location
-                  }
-               }""", "testiranje", "test street");
-
-        Response createResponseB = client.sendGraphQLRequest(createMutationB);
-        Integer buildingId = createResponseB.path("data.createBuilding.id");
-
-        String createMutation = String.format("""
-            mutation {
-                createMeasurement(input: {
-                deviceId: %d
-                buildingId: %d
-                timestamp: "%s"
-                energyKwh: %.2f
-            }) {
-                id
-            }
-            }""", 999999, buildingId, "2023-01-01T12:00:00Z", 42.5);
-
-        Response createResponse = client.sendGraphQLRequest(createMutation);
-        createResponse.prettyPrint();
-
-        assertNotNull(createResponse.path("errors"));
-        assertInstanceOf(List.class, createResponse.path("errors"));
-        assertFalse(((List<?>)createResponse.path("errors")).isEmpty());
     }
 }
 

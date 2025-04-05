@@ -20,31 +20,65 @@ public class MeasurementGraphql {
 
     @Mutation("createMeasurement")
     public Measurement createMeasurement(MeasurementInput input) {
-        return measurementService.createMeasurement(input);
+        try {
+            return measurementService.createMeasurement(input);
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating measurement: " + e.getMessage());
+        }
     }
 
     @Mutation("updateMeasurement")
     public Measurement uppdateMeasurement(MeasurementInput input) {
-        return measurementService.updateMeasurement(input);
+        try {
+            return measurementService.updateMeasurement(input);
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating measurement: " + e.getMessage());
+        }
     }
 
     @Mutation("removeMeasurement")
     public boolean removeMeasurement(MeasurementInput input) {
-        return measurementService.removeMeasurement(input);
+        try {
+            return measurementService.removeMeasurement(input);
+        } catch (Exception e) {
+            throw new RuntimeException("Error removing measurement: " + e.getMessage());
+        }
     }
 
     @Query("getMeasurement")
     public Measurement getMeasurement(Integer measurementId) {
-        return measurementService.getMeasurement(measurementId);
+        try {
+            return measurementService.getMeasurement(measurementId);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Error getting measurement: " + e.getMessage());
+        }
     }
 
     @Query("getAllMeasurements")
     public List<Measurement> getMeasurements(@DefaultValue("10") int limit, @DefaultValue("0") int offset, @DefaultValue("asc") String orderDirection) {
-        return measurementService.getAllMeasurements(limit, offset, orderDirection);
+        try {
+            return measurementService.getAllMeasurements(limit, offset, orderDirection);
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting measurements: " + e.getMessage());
+        }
     }
 
-    @Query("getEnergyConsumptionBuilding")
-    public Float getEnergyConsumptionBuilding(Integer buildingId, Instant from, Instant to) {
-        return measurementService.getEnergyConsumption(buildingId, from, to);
+    @Query("getEnergyConsumptionByBuilding")
+    public Float getEnergyConsumptionByBuilding(Integer buildingId, Instant from, Instant to) {
+        try {
+            return measurementService.getEnergyConsumption(buildingId, from, to);
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting energy consumption: " + e.getMessage());
+        }
     }
+
+    @Query("getEnergyConsumptionByDevice")
+    public Float getEnergyConsumptionByDevice(Integer deviceId, Instant from, Instant to) {
+        try {
+            return measurementService.getEnergyConsumptionByDevice(deviceId, from, to);
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting energy consumption: " + e.getMessage());
+        }
+    }
+
 }

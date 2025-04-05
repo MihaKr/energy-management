@@ -16,7 +16,6 @@ public class DeviceRepository {
     EntityManager entityManager;
 
     public Device createDevice(Device device) {
-        System.out.println(12);
         entityManager.persist(device);
         return device;
     }

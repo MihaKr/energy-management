@@ -19,7 +19,7 @@ public class DeviceService {
 
     public Device getDevice(Integer deviceId) {
         if (deviceId == null) {
-            return null;
+           throw new IllegalArgumentException("Device ID cannot be null");
         }
         return deviceRepository.getDevice(deviceId);
     }
@@ -37,7 +37,7 @@ public class DeviceService {
             throw new IllegalArgumentException("Device manufacturer is required");
         }
         if (input.getType() == null || input.getType().toString().isEmpty()) {
-            throw new IllegalArgumentException("Location name is required");
+            throw new IllegalArgumentException("Device type is required");
         }
 
         Device device = new Device(null, input.getType(), input.getManufacturer());
@@ -46,19 +46,15 @@ public class DeviceService {
 
     @Transactional
     public boolean deleteDevice(DeviceInput input) {
-        try {
-            if (input.getId() == null) {
-                throw new IllegalArgumentException("Device ID cannot be null");
-            }
-            Device device = deviceRepository.getDevice(input.getId());
-            if (device == null) {
-                throw new NotFoundException("Device not found with id: " + input.getId());
-            }
-            deviceRepository.deleteDevice(input.getId());
-            return true;
-        } catch (Exception e) {
-            return false;
+        if (input.getId() == null) {
+            throw new IllegalArgumentException("Device ID cannot be null");
         }
+        Device device = deviceRepository.getDevice(input.getId());
+        if (device == null) {
+            throw new NotFoundException("Device not found with id: " + input.getId());
+        }
+        deviceRepository.deleteDevice(input.getId());
+        return true;
     }
 
     @Transactional

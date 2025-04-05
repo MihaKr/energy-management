@@ -10,6 +10,7 @@ import org.hibernate.sql.Update;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class MeasurementTests {
 
     GraphQLClient client = new GraphQLClient(GRAPHQL_ENDPOINT);
 
-    private Integer createBuilding() {
+    private Response createBuilding() {
         String randomBuildingName = RandomStringUtil.generate(10);
         String randomLocation = RandomStringUtil.generate(10);
 
@@ -37,12 +38,10 @@ public class MeasurementTests {
                 }
             }""", randomBuildingName, randomLocation);
 
-        Response response = client.sendGraphQLRequest(createMutation);
-        Integer buildingId = response.path("data.createBuilding.id");
-        return buildingId;
+        return client.sendGraphQLRequest(createMutation);
     }
 
-    private Integer createDevice() {
+    private Response createDevice() {
         String randomType = RandomTypeUtil.generate();
         String randomManufacturer = RandomStringUtil.generate(10);
 
@@ -56,9 +55,7 @@ public class MeasurementTests {
                 }
             }""", randomType, randomManufacturer);
 
-        Response response = client.sendGraphQLRequest(createMutation);
-        Integer deviceId = response.path("data.createDevice.id");
-        return deviceId;
+        return client.sendGraphQLRequest(createMutation);
     }
 
     private Response getMeasurement(Integer measurementId) {
@@ -84,9 +81,8 @@ public class MeasurementTests {
         return client.sendGraphQLRequest(query);
     }
 
-    private Integer createMeasurement(Integer deviceId, Integer buildingId) {
-        float energyKwh = 42.5f;
-        String timestamp = Instant.now().toString();
+    private Response createMeasurement(Integer deviceId, Integer buildingId, Instant timestamp, Float energyKwh) {
+        Instant actualTimestamp = (timestamp != null) ? timestamp : Instant.now();
 
         String createMutation = String.format("""
             mutation {
@@ -98,11 +94,9 @@ public class MeasurementTests {
                 }) {
                     id
                 }
-            }""", deviceId, buildingId, timestamp, energyKwh);
+            }""", deviceId, buildingId, actualTimestamp, energyKwh);
 
-        Response response = client.sendGraphQLRequest(createMutation);
-        Integer measurementId = response.path("data.createMeasurement.id");
-        return measurementId;
+        return client.sendGraphQLRequest(createMutation);
     }
 
     private Response updateMeasurement(Integer measurementId, String timestamp, float energyKwh) {
@@ -141,34 +135,44 @@ public class MeasurementTests {
 
     @Test
     public void testCreateAndRetrieveMeasurement() {
-        Integer buildingId = createBuilding();
-        Integer deviceId = createDevice();
-        Integer measurementId = createMeasurement(deviceId, buildingId);
+        Response buildingResponse = createBuilding();
+        Response deviceResponse = createDevice();
+        Integer buildingId = buildingResponse.path("data.createBuilding.id");
+        Integer deviceId = deviceResponse.path("data.createDevice.id");
+        Float energyKwh = 42.5f;
+
+
+        Response measurementCreate = createMeasurement(deviceId, buildingId, null, energyKwh);
+        Integer measurementId = measurementCreate.path("data.createMeasurement.id");
+
         Response measurementResponse = getMeasurement(measurementId);
 
         int responseDeviceId = measurementResponse.path("data.getMeasurement.device.id");
         int responseBuildingId = measurementResponse.path("data.getMeasurement.building.id");
-        float energyKwh = measurementResponse.path("data.getMeasurement.energyKwh");
+        Float energyKwhResp = measurementResponse.path("data.getMeasurement.energyKwh");
         String timestamp = measurementResponse.path("data.getMeasurement.timestamp");
 
         assertEquals(measurementId, measurementResponse.path("data.getMeasurement.id"));
         assertEquals(deviceId.intValue(), responseDeviceId);
         assertEquals(buildingId.intValue(), responseBuildingId);
-        assertEquals(42.5f, energyKwh, 0.001f);
+        assertEquals(energyKwh, energyKwhResp, 0.001f);
     }
 
     @Test
     public void testUpdateMeasurement() {
-        Integer buildingId = createBuilding();
-        Integer deviceId = createDevice();
+        Response buildingResponse = createBuilding();
+        Response deviceResponse = createDevice();
+        Integer buildingId = buildingResponse.path("data.createBuilding.id");
+        Integer deviceId = deviceResponse.path("data.createDevice.id");
 
-        Integer measurementId = createMeasurement(deviceId, buildingId);
+        Float energyKwh = 42.5f;
+
+        Response measurementCreate = createMeasurement(deviceId, buildingId, null, energyKwh);
+        Integer measurementId = measurementCreate.path("data.createMeasurement.id");
 
         Response initialResponse = getMeasurement(measurementId);
         String initialTimestamp = initialResponse.path("data.getMeasurement.timestamp");
         float initialEnergyKwh = initialResponse.path("data.getMeasurement.energyKwh");
-
-        Integer newBuildingId = createBuilding();
 
         float newEnergyKwh = 75.8f;
         String newTimestamp = Instant.now().plusSeconds(3600).toString(); // One hour later
@@ -193,10 +197,15 @@ public class MeasurementTests {
 
     @Test
     public void testRemoveMeasurement() {
-        Integer buildingId = createBuilding();
-        Integer deviceId = createDevice();
+        Response buildingResponse = createBuilding();
+        Response deviceResponse = createDevice();
+        Integer buildingId = buildingResponse.path("data.createBuilding.id");
+        Integer deviceId = deviceResponse.path("data.createDevice.id");
 
-        Integer measurementId = createMeasurement(deviceId, buildingId);
+        Float energyKwh = 42.5f;
+
+        Response measurementCreate = createMeasurement(deviceId, buildingId, null, energyKwh);
+        Integer measurementId = measurementCreate.path("data.createMeasurement.id");
 
         Response initialResponse = getMeasurement(measurementId);
         assertNotNull(initialResponse.path("data.getMeasurement"));
@@ -205,6 +214,82 @@ public class MeasurementTests {
         Response measurementResponse = getMeasurement(measurementId);
 
         assertNull(measurementResponse.jsonPath().get("data.getMeasurement"));
+    }
+
+    @Test
+    public void testCreateMeasurementWithNonExistentDevice() {
+        Response createResponseB = createBuilding();
+        Integer buildingId = createResponseB.path("data.createBuilding.id");
+
+        Response createResponse = createMeasurement(999999, buildingId, null,42.5f);
+        createResponse.prettyPrint();
+
+        assertNotNull(createResponse.path("errors"));
+        assertInstanceOf(List.class, createResponse.path("errors"));
+        assertFalse(((List<?>)createResponse.path("errors")).isEmpty());
+    }
+
+    @Test
+    public void testCreateMeasurementWithNonExistentBuilding() {
+        Response createResponseB = createDevice();
+        Integer deviceId = createResponseB.path("data.createDevice.id");
+
+        Response createResponse = createMeasurement(deviceId, 999999, null, 42.5f);
+        createResponse.prettyPrint();
+
+        assertNotNull(createResponse.path("errors"));
+        assertInstanceOf(List.class, createResponse.path("errors"));
+        assertFalse(((List<?>)createResponse.path("errors")).isEmpty());
+    }
+
+    @Test
+    public void testUpdateNonExistentMeasurement() {
+        Response updateResponse = updateMeasurement(999999, "2023-01-01T12:00:00Z", 42.5f);
+
+        assertNotNull(updateResponse.path("errors"));
+        assertNull(updateResponse.path("data.updateMeasurement"));
+    }
+
+    @Test
+    public void testDeleteNonExistentMeasurement() {
+        Response removeResponse = removeMeasurement(999999);
+        assertNotNull(removeResponse);
+    }
+
+    @Test
+    public void testGetEnergyConsumptionByDevice() {
+        Response buildingResponse = createBuilding();
+        Response deviceResponse = createDevice();
+        Integer buildingId = buildingResponse.path("data.createBuilding.id");
+        Integer deviceId = deviceResponse.path("data.createDevice.id");
+
+        Instant now = Instant.now();
+        Instant oneWeekAgo = now.minus(Duration.ofDays(7));
+        Instant twoWeeksAgo = now.minus(Duration.ofDays(14));
+
+        createMeasurement(deviceId, buildingId, now.minus(Duration.ofDays(1)), 10.5f);
+        createMeasurement(deviceId, buildingId, now.minus(Duration.ofDays(2)), 15.3f);
+        createMeasurement(deviceId, buildingId, now.minus(Duration.ofDays(3)), 12.7f);
+
+        createMeasurement(deviceId, buildingId, twoWeeksAgo, 25.0f);
+
+        float expectedEnergySum = 38.5f;
+
+        // Test the energy consumption by device query
+        String query = String.format("""
+            query {
+                getEnergyConsumptionByDevice(
+                    deviceId: %d,
+                    from: "%s",
+                    to: "%s"
+                )
+            }""", deviceId, oneWeekAgo.toString(), now.toString());
+
+        Response response = client.sendGraphQLRequest(query);
+        Float actualEnergyConsumption = response.path("data.getEnergyConsumptionByDevice");
+
+        assertNotNull(actualEnergyConsumption);
+        assertEquals(expectedEnergySum, actualEnergyConsumption, 0.1f);
     }
 }
 

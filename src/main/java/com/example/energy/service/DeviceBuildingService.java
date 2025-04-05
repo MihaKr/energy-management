@@ -31,9 +31,10 @@ public class DeviceBuildingService {
             throw new IllegalArgumentException("Device is required");
         }
 
-        if (input.getInstalledSince() != null) {
+        if (input.getInstalledSince() == null) {
             throw new IllegalArgumentException("Installed Since is required");
         }
+
         DeviceBuilding deviceBuilding = new DeviceBuilding(input.getDeviceId(), input.getBuildingId(), input.getInstalledSince());
         return deviceBuildingRepository.createDeviceBuilding(deviceBuilding);
     }
@@ -55,7 +56,7 @@ public class DeviceBuildingService {
                 throw new IllegalArgumentException("Device ID cannot be null");
             }
 
-            DeviceBuilding deviceBuilding = deviceBuildingRepository.getDeviceBuilding(input.getBuildingId(), input.getDeviceId());
+            DeviceBuilding deviceBuilding = deviceBuildingRepository.getDeviceBuilding(input.getDeviceId(), input.getBuildingId());
             if (deviceBuilding == null) {
                 throw new NotFoundException("Device building not found with id: " + input.getBuildingId()
                         + input.getDeviceId());
@@ -82,8 +83,8 @@ public class DeviceBuildingService {
             throw new NotFoundException("DeviceBuilding not found with device id: " + input.getDeviceId() + " and building id: " + input.getBuildingId());
         }
 
-        if (input.getInstalledSince() != null) {
-            deviceBuilding.setInstalledSince(input.getInstalledSince());
+        if (input.getInstalledSince() == null) {
+            throw new IllegalArgumentException("Installed Since is required");
         }
 
         return deviceBuildingRepository.updateDeviceBuilding(deviceBuilding);

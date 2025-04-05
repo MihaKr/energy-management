@@ -1,5 +1,6 @@
 package com.example.energy.Graphql;
 
+import com.example.energy.model.DeviceType;
 import com.example.energy.util.GraphQLClient;
 import com.example.energy.util.RandomStringUtil;
 import com.example.energy.util.RandomTypeUtil;
@@ -22,28 +23,23 @@ public class DeviceTests {
     private static final String GRAPHQL_ENDPOINT = "/graphql";
     GraphQLClient client = new GraphQLClient(GRAPHQL_ENDPOINT);
 
-    @Test
-    public void testCreateAndRetrieveDevice() {
-        String randomType = RandomTypeUtil.generate();
-        String randomManufacturer = RandomStringUtil.generate(10);
-
+    private Response createDevice(String deviceType, String manufacturer) {
         String createMutation = String.format("""
                 mutation {
                       createDevice(input: {
                       type: %s
-                      manufacturer: "%s"              
+                      manufacturer: "%s"
                    }) {
                      id
                      type
                      manufacturer
                    }
-                }""", randomType, randomManufacturer);
+                }""", deviceType, manufacturer);
 
-        Response createResponse = client.sendGraphQLRequest(createMutation);
-        Integer deviceId = createResponse.path("data.createDevice.id");
+        return client.sendGraphQLRequest(createMutation);
+    }
 
-        assertNotNull(deviceId);
-
+    private Response getDevice(Integer deviceId) {
         String query = String.format("""
                 query device {
                 getDevice (deviceId: %d) {
@@ -53,7 +49,48 @@ public class DeviceTests {
                     }
                 }""", deviceId);
 
-        Response queryResponse = client.sendGraphQLRequest(query);
+        return client.sendGraphQLRequest(query);
+    }
+
+    private Response updateDevice(Integer deviceId, String deviceType, String manufacturer) {
+        String updateMutation = String.format("""
+                mutation {
+                    updateDevice(input: {
+                        id: %d,
+                        type: %s
+                        manufacturer: "%s"          
+                  }) {
+                    id
+                    type
+                    manufacturer
+                  }
+                }""", deviceId, deviceType, manufacturer);
+
+        return client.sendGraphQLRequest(updateMutation);
+    }
+
+    private Response deleteDevice(Integer deviceId) {
+        String deleteMutation = String.format("""
+                mutation {
+                    deleteDevice(input: {
+                        id: %d
+                  })
+                }""", deviceId);
+
+        return client.sendGraphQLRequest(deleteMutation);
+    }
+
+    @Test
+    public void testCreateAndRetrieveDevice() {
+        String randomType = RandomTypeUtil.generate();
+        String randomManufacturer = RandomStringUtil.generate(10);
+
+        Response createResponse = createDevice(randomType, randomManufacturer);
+        Integer deviceId = createResponse.path("data.createDevice.id");
+
+        assertNotNull(deviceId);
+
+        Response queryResponse = getDevice(deviceId);
 
         assertEquals(deviceId, queryResponse.path("data.getDevice.id"));
         assertEquals(randomType, queryResponse.path("data.getDevice.type"));
@@ -68,46 +105,12 @@ public class DeviceTests {
         String randomTypeUpdate = RandomTypeUtil.generate();
         String randomManufacturerUpdate = RandomStringUtil.generate(10);
 
-        String createMutation = String.format("""
-                mutation {
-                      createDevice(input: {
-                      type: %s
-                      manufacturer: "%s"              
-                   }) {
-                     id
-                     type
-                     manufacturer
-                   }
-                }""", randomType, randomManufacturer);
-
-        Response createResponse = client.sendGraphQLRequest(createMutation);
+        Response createResponse = createDevice(randomType, randomManufacturer);
         Integer deviceId = createResponse.path("data.createDevice.id");
 
-        String updateMutation = String.format("""
-           mutation {
-                updateDevice(input: {
-                    id: %d,
-                    type: %s
-                    manufacturer: "%s"          
-              }) {
-                id
-                type
-                manufacturer
-              }
-           }""", deviceId, randomTypeUpdate, randomManufacturerUpdate);
+        Response updateResponse = updateDevice(deviceId, randomTypeUpdate, randomManufacturerUpdate);
 
-        Response updateResponse = client.sendGraphQLRequest(updateMutation);
-
-        String query = String.format("""
-            query building {
-            getDevice (deviceId: %d) {
-                id,
-                type,
-                manufacturer,
-                }
-            }""", deviceId);
-
-        Response queryResponse = client.sendGraphQLRequest(query);
+        Response queryResponse = getDevice(deviceId);
 
         queryResponse.prettyPrint();
 
@@ -121,40 +124,12 @@ public class DeviceTests {
         String randomType = RandomTypeUtil.generate();
         String randomManufacturer = RandomStringUtil.generate(10);
 
-        String createMutation = String.format("""
-                mutation {
-                      createDevice(input: {
-                      type: %s
-                      manufacturer: "%s"              
-                   }) {
-                     id
-                     type
-                     manufacturer
-                   }
-                }""", randomType, randomManufacturer);
-
-        Response createResponse = client.sendGraphQLRequest(createMutation);
+        Response createResponse = createDevice(randomType, randomManufacturer);
         Integer deviceId = createResponse.path("data.createDevice.id");
 
-        String deleteMutation = String.format("""
-           mutation {
-                deleteDevice(input: {
-                    id: %d
-              }) 
-           }""", deviceId);
+        Response updateResponse = deleteDevice(deviceId);
 
-        Response updateResponse = client.sendGraphQLRequest(deleteMutation);
-
-        String query = String.format("""
-            query building {
-            getDevice (id: %d) {
-                id,
-                type,
-                manufacturer,
-                }
-            }""", deviceId);
-
-        Response queryResponse = client.sendGraphQLRequest(query);
+        Response queryResponse = getDevice(deviceId);
         assertNull(queryResponse.jsonPath().get("data.getDevice"));
     }
 
@@ -190,16 +165,7 @@ public class DeviceTests {
     public void testGetNonExistentDevice() {
         int nonExistentId = 999999;
 
-        String query = String.format("""
-            query {
-                getDevice(deviceId: %d) {
-                    id
-                    type
-                    manufacturer
-                }
-            }""", nonExistentId);
-
-        Response response = client.sendGraphQLRequest(query);
+        Response response = getDevice(nonExistentId);
         assertNull(response.path("data.getDevice"));
     }
 
@@ -209,20 +175,7 @@ public class DeviceTests {
         String randomType = RandomTypeUtil.generate();
         String randomManufacturer = RandomStringUtil.generate(10);
 
-        String updateMutation = String.format("""
-           mutation {
-                updateDevice(input: {
-                    id: %d,
-                    type: %s
-                    manufacturer: "%s"          
-              }) {
-                id
-                type
-                manufacturer
-              }
-           }""", nonExistentId, randomType, randomManufacturer);
-
-        Response updateResponse = client.sendGraphQLRequest(updateMutation);
+        Response updateResponse = updateDevice(nonExistentId, randomType, randomManufacturer);
 
         assertNotNull(updateResponse.path("errors"));
         assertNull(updateResponse.path("data.updateDevice"));
@@ -233,19 +186,7 @@ public class DeviceTests {
         String invalidType = "INVALID_TYPE";
         String randomManufacturer = RandomStringUtil.generate(10);
 
-        String createMutation = String.format("""
-            mutation {
-                  createDevice(input: {
-                  type: %s
-                  manufacturer: "%s"              
-               }) {
-                 id
-                 type
-                 manufacturer
-               }
-            }""", invalidType, randomManufacturer);
-
-        Response createResponse = client.sendGraphQLRequest(createMutation);
+        Response createResponse = createDevice(invalidType, randomManufacturer);
 
         assertNotNull(createResponse.path("errors"));
         assertNull(createResponse.path("data.createDevice"));
@@ -257,19 +198,7 @@ public class DeviceTests {
             String randomType = RandomTypeUtil.generate();
             String randomManufacturer = RandomStringUtil.generate(10);
 
-            String createMutation = String.format("""
-                   mutation {
-                        createDevice(input: {
-                         type: %s
-                         manufacturer: "%s"              
-                      }) {
-                        id
-                        type
-                        manufacturer
-                      }
-                   }""", randomType, randomManufacturer);
-
-            Response createResponse = client.sendGraphQLRequest(createMutation);
+            Response createResponse = createDevice(randomType, randomManufacturer);
             Integer deviceId = createResponse.path("data.createDevice.id");
         }
 

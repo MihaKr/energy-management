@@ -66,4 +66,17 @@ public class MeasurementRepository {
                 .setParameter("to", to)
                 .getResultList();
     }
+
+    public List<Measurement> findByDeviceIdAndTimestamp(Integer deviceId, Instant from, Instant to) {
+        return entityManager.createQuery(
+                        "SELECT m FROM Measurement m " +
+                                "WHERE m.device.id = :deviceId " +
+                                "AND m.timestamp >= :from " +
+                                "AND m.timestamp <= :to",
+                        Measurement.class)
+                .setParameter("deviceId", deviceId)
+                .setParameter("from", from)
+                .setParameter("to", to)
+                .getResultList();
+    }
 }

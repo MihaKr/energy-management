@@ -4,11 +4,9 @@ import com.example.energy.entity.Device;
 import com.example.energy.entity.DeviceBuilding;
 import com.example.energy.graphql.input.DeviceBuildingInput;
 import com.example.energy.service.DeviceBuildingService;
+import graphql.GraphQLException;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.graphql.DefaultValue;
-import org.eclipse.microprofile.graphql.GraphQLApi;
-import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.*;
 
 import java.util.List;
 
@@ -19,31 +17,55 @@ public class DeviceBuildingGraphql {
 
     @Mutation("createDeviceBuilding")
     public DeviceBuilding createDeviceBuilding(DeviceBuildingInput input) {
-        return deviceBuildingService.createDeviceBuilding(input);
+        try {
+            return deviceBuildingService.createDeviceBuilding(input);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Query("getDeviceBuilding")
-    public DeviceBuilding getDeviceBuilding(Integer deviceId, Integer buildingId) {
-        return deviceBuildingService.getDeviceBuilding(deviceId, buildingId);
+    public DeviceBuilding getDeviceBuilding(@Name("deviceId") Integer deviceId, @Name("buildingId") Integer buildingId) {
+        try {
+            return deviceBuildingService.getDeviceBuilding(deviceId, buildingId);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Mutation("deleteDeviceBuilding")
     public boolean deleteDeviceBuilding(DeviceBuildingInput input) {
-        return deviceBuildingService.deleteDeviceBuilding(input);
+        try {
+            return deviceBuildingService.deleteDeviceBuilding(input);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Mutation("updateDeviceBuilding")
     public DeviceBuilding updateDeviceBuilding(DeviceBuildingInput input) {
-        return deviceBuildingService.updateDeviceBuilding(input);
+        try {
+            return deviceBuildingService.updateDeviceBuilding(input);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Query("getAllDeviceBuilding")
     public List<DeviceBuilding> getAllDeviceBuilding(@DefaultValue("10") int limit, @DefaultValue("0") int offset, @DefaultValue("asc") String orderDirection) {
-        return deviceBuildingService.getAllDeviceBuilding(limit, offset, orderDirection);
+        try {
+            return deviceBuildingService.getAllDeviceBuilding(limit, offset, orderDirection);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 
     @Query("getDevicesByBuilding")
     public List<Device> getDevicesByBuilding(Integer buildingId) {
-        return deviceBuildingService.getDevicesByBuildingId(buildingId);
+        try {
+            return deviceBuildingService.getDevicesByBuildingId(buildingId);
+        } catch (Exception e) {
+            throw new GraphQLException(e.getMessage());
+        }
     }
 }
