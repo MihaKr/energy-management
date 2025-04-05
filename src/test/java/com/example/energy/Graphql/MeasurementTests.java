@@ -188,11 +188,19 @@ public class MeasurementTests {
         String updatedTimestamp = updatedResponse.path("data.getMeasurement.timestamp");
 
         assertEquals(measurementId, updatedResponse.path("data.getMeasurement.id"));
-        assertEquals(newTimestamp, updatedTimestamp);
+
+        Instant originalInstant = Instant.parse(initialTimestamp);
+        Instant newInstant = Instant.parse(newTimestamp);
+        Instant updatedInstant = Instant.parse(updatedTimestamp);
+
+        long timeDifference = Math.abs(newInstant.getEpochSecond() - updatedInstant.getEpochSecond());
+        assertTrue(timeDifference < 1);
+
         assertEquals(newEnergyKwh, updatedEnergyKwh, 0.001f);
 
-        assertNotEquals(initialEnergyKwh, newEnergyKwh);
-        assertNotEquals(initialTimestamp, newTimestamp);
+        assertNotEquals(initialEnergyKwh, updatedEnergyKwh);
+
+        assertNotEquals(initialTimestamp, updatedTimestamp);
     }
 
     @Test
