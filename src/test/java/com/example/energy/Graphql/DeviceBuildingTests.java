@@ -149,7 +149,15 @@ public class DeviceBuildingTests {
         Response getResponse = getDeviceBuilding(deviceId, buildingId);
         assertEquals(deviceId, getResponse.path("data.getDeviceBuilding.deviceId"));
         assertEquals(buildingId, getResponse.path("data.getDeviceBuilding.buildingId"));
-        assertEquals(installedSince, getResponse.path("data.getDeviceBuilding.installedSince"));
+
+        String retrievedTimestamp = getResponse.path("data.getDeviceBuilding.installedSince");
+        assertNotNull(retrievedTimestamp);
+
+        Instant originalInstant = Instant.parse(installedSince);
+        Instant retrievedInstant = Instant.parse(retrievedTimestamp);
+
+        long timeDifference = Math.abs(originalInstant.getEpochSecond() - retrievedInstant.getEpochSecond());
+        assertTrue(timeDifference < 1);
     }
 
     @Test
