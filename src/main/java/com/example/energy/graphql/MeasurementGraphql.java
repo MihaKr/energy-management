@@ -67,7 +67,7 @@ public class MeasurementGraphql {
     @Query("getEnergyConsumptionByBuilding")
     public Float getEnergyConsumptionByBuilding(Integer buildingId, Instant from, Instant to) {
         try {
-            return measurementService.getEnergyConsumption(buildingId, from, to);
+            return measurementService.getEnergyConsumptionByBuilding(buildingId, from, to);
         } catch (Exception e) {
             throw new GraphQLException(e.getMessage());
         }

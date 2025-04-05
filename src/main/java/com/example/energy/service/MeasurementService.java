@@ -134,7 +134,7 @@ public class MeasurementService {
         return measurementRepository.updateMeasurement(measurement);
     }
 
-    public Float getEnergyConsumption(Integer buildingId, Instant from, Instant to) {
+    public Float getEnergyConsumptionByBuilding(Integer buildingId, Instant from, Instant to) {
         if (buildingId == null) {
             throw new IllegalArgumentException("Building ID cannot be null");
         }
