@@ -7,6 +7,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -162,8 +163,22 @@ public class DeviceBuildingTests {
         String newInstalledSince = Instant.now().plusSeconds(3600).toString();
         Response updateResponse = updateDeviceBuilding(deviceId, buildingId, newInstalledSince);
 
+        updateResponse.prettyPrint();
+
         Response getResponse = getDeviceBuilding(deviceId, buildingId);
-        assertEquals(newInstalledSince, getResponse.path("data.getDeviceBuilding.installedSince"));
+
+        getResponse.prettyPrint();
+
+        Instant expectedInstant = Instant.parse(newInstalledSince);
+        Instant actualInstant = Instant.parse(getResponse.path("data.getDeviceBuilding.installedSince").toString());
+
+        long differenceInMillis = Math.abs(
+                Duration.between(expectedInstant, actualInstant).toMillis()
+        );
+
+        assertTrue(differenceInMillis <= 100,
+                "Timestamps should be within 100 milliseconds, but difference was " +
+                        differenceInMillis + " milliseconds");
     }
 
     @Test

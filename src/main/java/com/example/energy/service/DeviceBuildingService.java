@@ -83,8 +83,8 @@ public class DeviceBuildingService {
             throw new NotFoundException("DeviceBuilding not found with device id: " + input.getDeviceId() + " and building id: " + input.getBuildingId());
         }
 
-        if (input.getInstalledSince() == null) {
-            throw new IllegalArgumentException("Installed Since is required");
+        if (input.getInstalledSince() != null) {
+            deviceBuilding.setInstalledSince(input.getInstalledSince());
         }
 
         return deviceBuildingRepository.updateDeviceBuilding(deviceBuilding);
