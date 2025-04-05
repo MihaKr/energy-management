@@ -4,6 +4,7 @@ package com.example.energy.graphql;
 import com.example.energy.entity.Measurement;
 import com.example.energy.graphql.input.MeasurementInput;
 import com.example.energy.service.MeasurementService;
+import graphql.GraphQLException;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.GraphQLApi;
@@ -23,7 +24,7 @@ public class MeasurementGraphql {
         try {
             return measurementService.createMeasurement(input);
         } catch (Exception e) {
-            throw new RuntimeException("Error creating measurement: " + e.getMessage());
+            throw new GraphQLException(e.getMessage());
         }
     }
 
@@ -32,7 +33,7 @@ public class MeasurementGraphql {
         try {
             return measurementService.updateMeasurement(input);
         } catch (Exception e) {
-            throw new RuntimeException("Error updating measurement: " + e.getMessage());
+            throw new GraphQLException(e.getMessage());
         }
     }
 
@@ -41,7 +42,7 @@ public class MeasurementGraphql {
         try {
             return measurementService.removeMeasurement(input);
         } catch (Exception e) {
-            throw new RuntimeException("Error removing measurement: " + e.getMessage());
+            throw new GraphQLException(e.getMessage());
         }
     }
 
@@ -50,7 +51,7 @@ public class MeasurementGraphql {
         try {
             return measurementService.getMeasurement(measurementId);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Error getting measurement: " + e.getMessage());
+            throw new GraphQLException(e.getMessage());
         }
     }
 
@@ -59,7 +60,7 @@ public class MeasurementGraphql {
         try {
             return measurementService.getAllMeasurements(limit, offset, orderDirection);
         } catch (Exception e) {
-            throw new RuntimeException("Error getting measurements: " + e.getMessage());
+            throw new GraphQLException(e.getMessage());
         }
     }
 
@@ -68,7 +69,7 @@ public class MeasurementGraphql {
         try {
             return measurementService.getEnergyConsumption(buildingId, from, to);
         } catch (Exception e) {
-            throw new RuntimeException("Error getting energy consumption: " + e.getMessage());
+            throw new GraphQLException(e.getMessage());
         }
     }
 
@@ -77,7 +78,7 @@ public class MeasurementGraphql {
         try {
             return measurementService.getEnergyConsumptionByDevice(deviceId, from, to);
         } catch (Exception e) {
-            throw new RuntimeException("Error getting energy consumption: " + e.getMessage());
+            throw new GraphQLException(e.getMessage());
         }
     }
 
