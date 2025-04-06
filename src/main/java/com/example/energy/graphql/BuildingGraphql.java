@@ -42,7 +42,6 @@ public class BuildingGraphql {
 
     @Mutation("createBuilding")
     public Building createBuilding(BuildingInput input) {
-        System.out.println(12);
         try {
             return buildingService.addBuilding(input);
         } catch (Exception e) {

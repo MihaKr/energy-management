@@ -29,7 +29,7 @@ public class MeasurementGraphql {
     }
 
     @Mutation("updateMeasurement")
-    public Measurement uppdateMeasurement(MeasurementInput input) {
+    public Measurement updateMeasurement(MeasurementInput input) {
         try {
             return measurementService.updateMeasurement(input);
         } catch (Exception e) {

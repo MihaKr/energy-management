@@ -1,32 +1,5 @@
 # Energy Management System
 
-Backend sistem za **upravljanje porabe energije** v različnih zgradbah. Sistem omogoča spremljanje meritev porabe energije, evidentiranje naprav ter povezovanje naprav z zgradbami.
-
-### Tehnologije
-
-* **Quarkus** kot backend framework
-* **PostgreSQL** kot podatkovna baza
-* **GraphQL** za izpostavitev API-jev (CRUDL)
-* **Hibernate ORM** za mapiranje entitet
-* **Flyway** za upravljanje migracij baze podatkov
-* **Docker & Docker Compose** za orkestracijo
-
-### Podatkovni model
-
-1. **Building (Zgradba)**
-    * Podatki o zgradbi (ime, lokacija)
-
-2. **Device (Naprava)**
-    * Podatki o napravi (tip: HVAC, SOLAR, METER, proizvajalec)
-
-3. **Measurement (Meritev)**
-    * Meritve porabe energije naprav v zgradbah s časovno značko  (naprava, zgradba, čas, vrednost)
-
-4. **DeviceBuilding (Povezava naprava-zgradba)**
-    * Povezovalna tabela med napravami in zgradbami z datumom namestitve (naprava, zgradba, datum_namestitve)
-
-## English Description
-
 A backend system for **energy consumption management** across different buildings. The system enables monitoring of energy consumption measurements, device registration, and connecting devices with buildings.
 
 ### Technologies
@@ -50,7 +23,7 @@ A backend system for **energy consumption management** across different building
     * Energy usage measurements of devices in buildings with timestamps  (device, building, timestamp, value)
 
 4. **DeviceBuilding**
-    * Junction table connecting devices to buildings with installation date (device, building, installed_since)
+    * Link table connecting devices to buildings with installation date (device, building, installed_since)
 
 ## Getting Started
 
@@ -67,8 +40,10 @@ Or use the default values in the docker-compose.yml file.
 1. **Build the application**:
 
 ```bash
-./mvnw package
+./mvnw package -DskipTests=true 
 ```
+
+The tests are skipped due to requiring a database which is in the postgres container, they are run later during docker compose.
 
 2. **Start the application with Docker Compose**:
 
@@ -89,6 +64,85 @@ For local development with hot reloading:
 ```
 
 This will start Quarkus in development mode with the UI available at [http://localhost:8080/q/dev/](http://localhost:8080/q/dev/).
+
+## Technical Details
+
+### Database Configuration
+
+The project uses PostgreSQL with separate databases for development/testing, and production:
+
+- **Production**: `energy_management` - Used in production deployments (is persisted)
+- **Testing**: `energy_management_test` - Used for automated tests (is deleted after each reinitialisation)
+
+The Docker Compose setup automatically creates both databases using the initialization script at `src/main/docker/postgres/create-multiple-postgresql-databases.sh`.
+
+Environment variables can be used to customize the database configuration by defining them in an .env file if no -env file is present the defaults are used:
+- `DB_USER` - PostgreSQL username (default: postgres)
+- `DB_PASSWORD` - PostgreSQL password (default: postgres)
+- `DB_NAME` - Main database name (default: energy_management)
+
+### Data Migration
+
+Database schema initialization and updates are managed using Flyway:
+
+- Migration scripts are located in `src/main/resources/db/migration/`
+- The initial schema creation is defined in `V1.0.0__Create_tables.sql`
+- Migrations run automatically on application startup (`quarkus.flyway.migrate-at-start=true`)
+
+### Application Profiles
+
+The application uses different configurations based on the active profile:
+
+- **dev**: For local development with automatic schema updates
+- **test**: Used during automated tests with a clean database for each test
+- **prod**: Production settings with connection to the Docker Compose PostgreSQL instance
+
+Profile-specific settings are defined in `src/main/resources/application.properties`.
+
+### Github Actions 
+
+This project also includes a github action that automatically packages and runs the tests, after each push
+
+### Additional Features
+
+* **Input Validation**: The system implements robust validation for all entity attributes to ensure data integrity and consistency.
+
+* **Pagination**: All GraphQL list queries support pagination through `limit` and `offset` parameters, with optional sorting direction through the `orderDirection` parameter.
+
+* **Error Handling**: The GraphQL API implements comprehensive error handling to provide meaningful feedback when operations fail or inputs are invalid.
+
+### GraphQL API
+
+The GraphQL API is implemented using SmallRye GraphQL extension for Quarkus:
+
+- GraphQL schema is auto-generated from Java code
+- The UI interface is available at `/q/graphql-ui` when running the application
+- All CRUD operations are exposed through GraphQL endpoints
+
+### Entity Relationships
+
+The application implements the following entity relationships:
+
+- One-to-Many: Building → Measurements
+- One-to-Many: Device → Measurements
+- Many-to-Many: Building ↔ Device (through DeviceBuilding junction table)
+
+### Docker Configuration
+
+The project includes multiple Docker configurations:
+
+- `Dockerfile.jvm`: Standard JVM-based image (used by default)
+- `Dockerfile.native`: Native executable image for improved startup and memory usage (not used)
+- `Dockerfile.legacy-jar`: Traditional JAR-based deployment (not used)
+- `docker-compose.yml`: Orchestrates the application and database containers
+
+### Testing
+
+The project includes comprehensive GraphQL endpoint tests:
+
+- Integration tests use the actual database with test transactions
+- Each entity has dedicated test classes (BuildingTests, DeviceTests, etc.)
+- Tests verify CRUD operations, validations, and business logic
 
 ## GraphQL API
 
