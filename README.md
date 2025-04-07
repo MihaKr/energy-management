@@ -264,20 +264,6 @@ Run the tests with:
 
 The project includes tests for all GraphQL endpoints with specific tests for edge cases and data validation.
 
-## Building Native Executable
-
-You can create a native executable using:
-
-```bash
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container:
-
-```bash
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
 ## Project Structure
 
 - `src/main/java/com/example/energy/entity/` - Data model entities
