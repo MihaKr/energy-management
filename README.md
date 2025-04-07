@@ -244,6 +244,48 @@ mutation {
 - `updateDeviceBuilding(input: DeviceBuildingInput!): DeviceBuilding`
 - `deleteDeviceBuilding(input: DeviceBuildingInput!): Boolean`
 
+### Input Objects
+
+The following input objects are used in mutations:
+
+#### BuildingInput
+```graphql
+input BuildingInput {
+  buildingId: Int      
+  name: String          
+  location: String    
+}
+```
+
+#### DeviceInput
+```graphql
+input DeviceInput {
+  id: Int              
+  type: DeviceType       
+  manufacturer: String
+}
+```
+
+#### MeasurementInput
+```graphql
+input MeasurementInput {
+  id: Int             
+  deviceId: Int         
+  buildingId: Int        
+  timestamp: Instant (ISO-8601 format, e.g. "2024-04-01T00:00:00Z")
+  energyKwh: Float      
+}
+```
+
+#### DeviceBuildingInput
+```graphql
+input DeviceBuildingInput {
+  deviceId: Int      
+  buildingId: Int      
+  installedSince: String (ISO-8601 format, e.g. "2024-04-01T00:00:00Z")
+}
+```
+
 ## Testing
 
 Run the tests with:
