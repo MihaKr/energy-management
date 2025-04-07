@@ -58,16 +58,6 @@ docker-compose up -d
 
 Open your browser and go to: [http://localhost:8080/q/graphql-ui](http://localhost:8080/q/graphql-ui)
 
-### Running in Development Mode
-
-For local development with hot reloading:
-
-```bash
-./mvnw quarkus:dev
-```
-
-This will start Quarkus in development mode with the UI available at [http://localhost:8080/q/dev/](http://localhost:8080/q/dev/).
-
 ## Technical Details
 
 ### Database Configuration
