@@ -25,6 +25,9 @@ A backend system for **energy consumption management** across different building
 4. **DeviceBuilding**
     * Link table connecting devices to buildings with installation date (device, building, installed_since)
 
+![Energy Management System Data Model](db_energy.png)
+
+
 ## Getting Started
 
 ### Prerequisites
